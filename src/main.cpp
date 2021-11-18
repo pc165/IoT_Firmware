@@ -1,10 +1,10 @@
-// Import libraries (BLEPeripheral depends on SPI)
 #include "BLESerial.h"
 #include "pic.h"
+#include "pic2.h"
+#include "pic3.h"
 #include <BLEPeripheral.h>
 #include <SPI.h>
-// #define PIN_LED1 2
-//custom boards may override default pin definitions with BLESerial(PIN_REQ, PIN_RDY, PIN_RST)
+#define PIN_LED1 2
 BLESerial bleSerial;
 
 void blePeripheralConnectHandler(BLECentral &central) {
@@ -37,16 +37,22 @@ void handleMessage() {
         int byte;
         while ((byte = bleSerial.read()) > 0) {
             switch (byte) {
-            case '1':
-                bleSerial.write(pic, PIC_LEN);
+            case 0x01:
+                bleSerial.write(PICTURE1, PICTURE1_LEN);
                 break;
-
+            case 0x02:
+                bleSerial.write(PICTURE2, PICTURE2_LEN);
+                break;
+            case 0x03:
+                bleSerial.write(PICTURE3, PICTURE3_LEN);
+                break;
             default:
                 break;
             }
         }
     }
 }
+
 void loop() {
     bleSerial.poll();
     handleMessage();
