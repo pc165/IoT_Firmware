@@ -1,3 +1,4 @@
+// https://github.com/sandeepmistry/arduino-BLEPeripheral/tree/master/examples/serial
 #ifndef _BLE_SERIAL_H_
 #define _BLE_SERIAL_H_
 
