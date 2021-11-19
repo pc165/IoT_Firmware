@@ -40,6 +40,16 @@ class BLESerial : public BLEPeripheral, public Stream {
 
     void _received(const uint8_t *data, size_t size);
     static void _received(BLECentral & /*central*/, BLECharacteristic &rxCharacteristic);
+
+    unsigned long _imgFlushed;
+    size_t _imgCount;
+    uint8_t _imgBuffer[BLE_ATTRIBUTE_MAX_VALUE_LENGTH];
+    BLECharacteristic _imgCharacteristic = BLECharacteristic("6E400004-B5A3-F393-E0A9-E50E24DCCA9E", BLENotify, BLE_ATTRIBUTE_MAX_VALUE_LENGTH);
+    BLEDescriptor _imgNameDescriptor = BLEDescriptor("2901", "IMG - Transfer Data (Notify)");
+
+  public:
+    virtual void imageFlush(void);
+    virtual size_t imageWrite(const uint8_t *buffer, size_t size);
 };
 
 #endif

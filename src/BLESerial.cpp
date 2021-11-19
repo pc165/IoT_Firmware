@@ -18,6 +18,11 @@ BLESerial::BLESerial(unsigned char req, unsigned char rdy, unsigned char rst) : 
     this->_rxCharacteristic.setEventHandler(BLEWritten, BLESerial::_received);
     addAttribute(this->_txCharacteristic);
     addAttribute(this->_txNameDescriptor);
+
+    this->_imgCount = 0;
+    this->_imgFlushed = 0;
+    addAttribute(this->_imgCharacteristic);
+    addAttribute(this->_imgNameDescriptor);
 }
 
 void BLESerial::begin(...) {
@@ -129,4 +134,26 @@ void BLESerial::_received(const uint8_t *data, size_t size) {
 
 void BLESerial::_received(BLECentral & /*central*/, BLECharacteristic &rxCharacteristic) {
     BLESerial::_instance->_received(rxCharacteristic.value(), rxCharacteristic.valueLength());
+}
+
+void BLESerial::imageFlush(void) {
+    if (this->_imgCount == 0) return;
+    this->_imgCharacteristic.setValue(this->_imgBuffer, this->_imgCount);
+    this->_imgFlushed = millis();
+    this->_imgCount = 0;
+    BLEPeripheral::poll();
+}
+
+size_t BLESerial::imageWrite(const uint8_t *buffer, size_t size) {
+    size_t n = 0;
+    while (size--) {
+        uint8_t byte = *buffer++;
+        BLEPeripheral::poll();
+        if (this->_imgCharacteristic.subscribed() == false) return 0;
+        this->_imgBuffer[this->_imgCount++] = byte;
+        if (this->_imgCount == sizeof(this->_imgBuffer))
+            imageFlush();
+        n++;
+    }
+    return n;
 }

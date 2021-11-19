@@ -36,18 +36,11 @@ void setup() {
 
 void sendPicture(const uint8_t *pic, const size_t len) {
     uint32_t code = 0;
-    uint32_t buffer = 0xFFFFFFFFu;
-    crc32(pic, len, &code);
-
-    bleSerial.write((uint8_t *)&buffer, 4);
-    bleSerial.write(code);
-
-    buffer = 0xBBBBBBBBu;
-    bleSerial.write((uint8_t *)&buffer, 4);
-    bleSerial.write(pic, len);
-    
-    buffer = 0xAAAAAAAAu;
-    bleSerial.write((uint8_t *)&buffer, 4);
+    uint8_t buffer[1 + sizeof(len)];
+    buffer[0] = 1;
+    memcpy(&buffer[1], &len, sizeof(len));
+    bleSerial.write(buffer, sizeof(buffer));
+    bleSerial.imageWrite(pic, len);
 }
 
 void handleMessage() {
@@ -58,7 +51,7 @@ void handleMessage() {
             case 0x01:
                 sendPicture(PICTURE1, PICTURE1_LEN);
                 break;
-            case 0x02:
+            case 'A':
                 sendPicture(PICTURE1, PICTURE1_LEN);
                 break;
             case 0x03:
