@@ -2,7 +2,6 @@
 #include "crc32.h"
 #include "pic.h"
 #include "pic2.h"
-#include "pic3.h"
 #include <BLEPeripheral.h>
 #include <SPI.h>
 
@@ -36,26 +35,30 @@ void setup() {
 
 void sendPicture(const uint8_t *pic, const size_t len) {
     uint32_t code = 0;
-    uint8_t buffer[1 + sizeof(len)];
-    buffer[0] = 1;
+    uint8_t buffer[1 + sizeof(len) + sizeof(code)]; // 9 bytes
+    buffer[0] = 0xFF;
+    crc32(buffer, len, &code);
     memcpy(&buffer[1], &len, sizeof(len));
+    memcpy(&buffer[1 + sizeof(len)], &code, sizeof(code));
+    Serial.print(code);
+    Serial.println();
     bleSerial.write(buffer, sizeof(buffer));
-    bleSerial.imageWrite(pic, len);
+    bleSerial.flush();
+    bleSerial.SendFile(pic, len);
 }
 
+bool pictureN = 0;
 void handleMessage() {
     if (bleSerial) {
         int byte;
         while ((byte = bleSerial.read()) > 0) {
             switch (byte) {
             case 0x01:
-                sendPicture(PICTURE1, PICTURE1_LEN);
-                break;
-            case 'A':
-                sendPicture(PICTURE1, PICTURE1_LEN);
-                break;
-            case 0x03:
-                sendPicture(PICTURE1, PICTURE1_LEN);
+                if (pictureN)
+                    sendPicture(PICTURE1, PICTURE1_LEN);
+                else
+                    sendPicture(PICTURE2, PICTURE2_LEN);
+                pictureN = !pictureN;
                 break;
             default:
                 break;

@@ -1,3 +1,16 @@
 {
-    "python.pythonPath": "C:\\Users\\x\\AppData\\Local\\Programs\\Python\\Python39\\python.exe"
+    "python.pythonPath": "C:\\Users\\x\\AppData\\Local\\Programs\\Python\\Python39\\python.exe",
+    "files.associations": {
+        "ostream": "cpp",
+        "list": "cpp",
+        "*.rmd": "markdown",
+        "*.csl": "csharp",
+        "*.csm": "csharp",
+        "*.cls": "vb",
+        "*.dsr": "vb",
+        "*.frm": "vb",
+        "*.wbt": "webots-proto",
+        "ble.h": "c",
+        "ble_image_transfer_service.h": "c"
+    }
 }
