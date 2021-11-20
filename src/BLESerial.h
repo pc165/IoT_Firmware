@@ -49,8 +49,7 @@ class BLESerial : public BLEPeripheral, public Stream {
     BLEDescriptor _imgNameDescriptor = BLEDescriptor("2901", "IMG - Transfer Data (Notify)");
 
   public:
-    virtual void imageFlush(void);
-    virtual size_t imageWrite(const uint8_t *buffer, size_t size);
+    virtual size_t SendFile(const uint8_t *buffer, size_t size);
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "BLESerial.h"
-
-// #define BLE_SERIAL_DEBUG
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 BLESerial *BLESerial::_instance = NULL;
 
@@ -99,7 +100,8 @@ size_t BLESerial::write(uint8_t byte) {
     BLEPeripheral::poll();
     if (this->_txCharacteristic.subscribed() == false) return 0;
     this->_txBuffer[this->_txCount++] = byte;
-    if (this->_txCount == sizeof(this->_txBuffer)) flush();
+    if (this->_txCount == sizeof(this->_txBuffer))
+        flush();
 #ifdef BLE_SERIAL_DEBUG
     Serial.print(F("BLESerial::write("));
     Serial.print((char)byte);
@@ -136,24 +138,29 @@ void BLESerial::_received(BLECentral & /*central*/, BLECharacteristic &rxCharact
     BLESerial::_instance->_received(rxCharacteristic.value(), rxCharacteristic.valueLength());
 }
 
-void BLESerial::imageFlush(void) {
-    if (this->_imgCount == 0) return;
-    this->_imgCharacteristic.setValue(this->_imgBuffer, this->_imgCount);
-    this->_imgFlushed = millis();
-    this->_imgCount = 0;
-    BLEPeripheral::poll();
-}
+#define SUCCESS 1
+size_t BLESerial::SendFile(const uint8_t *buffer, size_t file_size) {
+    uint32_t return_code = SUCCESS;
+    uint32_t file_pos = 0;
+    uint32_t packet_size = 0;
+    while (file_size != file_pos) {
+        if ((file_size - file_pos) > BLE_ATTRIBUTE_MAX_VALUE_LENGTH) {
+            packet_size = BLE_ATTRIBUTE_MAX_VALUE_LENGTH;
+        } else if ((file_size - file_pos) > 0) {
+            packet_size = file_size - file_pos;
+        }
 
-size_t BLESerial::imageWrite(const uint8_t *buffer, size_t size) {
-    size_t n = 0;
-    while (size--) {
-        uint8_t byte = *buffer++;
-        BLEPeripheral::poll();
-        if (this->_imgCharacteristic.subscribed() == false) return 0;
-        this->_imgBuffer[this->_imgCount++] = byte;
-        if (this->_imgCount == sizeof(this->_imgBuffer))
-            imageFlush();
-        n++;
+        if (packet_size > 0) {
+            return_code = this->_txCharacteristic.setValue(&buffer[file_pos], packet_size);
+            BLEPeripheral::poll();
+            if (return_code == SUCCESS) {
+                file_pos += packet_size;
+            }
+        } else {
+            file_size = 0;
+            Serial.println("Done transfer");
+            break;
+        }
     }
-    return n;
+    return file_pos;
 }
